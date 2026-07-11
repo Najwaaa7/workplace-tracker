@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workplace Hub — Implementation Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1c2633; --blue:#001b72; --aqua:#0BC0FF; --purple:#7122f4;
+  --lav-bg:#f5f3fc; --card:#ffffff; --ink:#1c2633; --muted:#6b7385;
+  --line:#e5e2f2;
+  --s-not:#8a91a3; --s-prog:#0BC0FF; --s-sub:#7122f4; --s-need:#FF7800; --s-ver:#3aa316;
+  --radius:14px;
+  --shadow:0 1px 3px rgba(28,38,51,.06), 0 6px 18px rgba(28,38,51,.05);
+  font-size:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--lav-bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.brandfont{font-family:'Sora','Inter',sans-serif}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:.9rem}
+
+/* ---------- Header ---------- */
+header{background:linear-gradient(120deg,var(--navy) 0%,#232f52 55%,var(--blue) 100%);color:#fff;padding:0 0 0}
+.hd-inner{max-width:1080px;margin:0 auto;padding:22px 20px 18px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+.hd-title small{display:block;color:var(--aqua);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:.7rem;margin-bottom:4px}
+.hd-title h1{font-size:1.35rem;font-weight:700;letter-spacing:-.01em}
+.hd-title .sub{color:#b9c2d8;font-size:.8rem;margin-top:3px}
+.role-box{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:8px 10px}
+.role-box label{font-size:.72rem;color:#b9c2d8;font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.role-box select{background:#fff;color:var(--ink);border:none;border-radius:7px;padding:7px 10px;font-weight:600;min-width:210px}
+
+/* ---------- Nav tabs ---------- */
+nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.nav-inner{max-width:1080px;margin:0 auto;padding:0 20px;display:flex;gap:4px;overflow-x:auto}
+.tab{border:none;background:none;padding:14px 14px 12px;font-size:.88rem;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.tab.active{color:var(--blue);border-bottom-color:var(--aqua)}
+.tab:focus-visible{outline:2px solid var(--purple);outline-offset:-2px;border-radius:6px}
+
+main{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+.section-title{font-size:1.05rem;font-weight:700;margin:26px 0 12px;display:flex;align-items:center;gap:10px}
+.section-title:first-child{margin-top:0}
+.section-title .count{background:var(--purple);color:#fff;font-size:.72rem;border-radius:999px;padding:2px 9px;font-family:'Inter'}
+
+/* ---------- Overview ---------- */
+.overall{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-bottom:22px;border-top:4px solid var(--aqua)}
+.overall .big{font-family:'Sora';font-size:2.2rem;font-weight:700;color:var(--blue);line-height:1}
+.overall .lbl{font-size:.78rem;color:var(--muted);margin-top:4px}
+.bar{flex:1;min-width:200px}
+.bar .track{height:10px;border-radius:999px;background:var(--lav-bg);overflow:hidden}
+.bar .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--purple),var(--aqua));transition:width .5s ease}
+.overall .mini-stats{display:flex;gap:18px;flex-wrap:wrap}
+.mini-stats div b{display:block;font-size:1.15rem;font-family:'Sora';color:var(--ink)}
+.mini-stats div span{font-size:.72rem;color:var(--muted)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.fcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:12px;border:1px solid transparent;transition:border-color .15s}
+.fcard:hover{border-color:var(--aqua)}
+.fcard-top{display:flex;gap:14px;align-items:center}
+.ring{width:62px;height:62px;flex:none;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Sora';font-weight:700;font-size:.85rem;color:var(--blue)}
+.fcard h3{font-size:.98rem;font-weight:700;line-height:1.3}
+.fcard .fmeta{font-size:.78rem;color:var(--muted);margin-top:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:.7rem;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--lav-bg);color:var(--muted)}
+.chip.aqua{background:#e3f7ff;color:#0077a8}
+.chip.green{background:#e8f6e2;color:#2c7a10}
+.chip.orange{background:#fff0e0;color:#b35400}
+.chip.purple{background:#f0e8fe;color:var(--purple)}
+.chip.navy{background:#e8ebf1;color:var(--navy)}
+.fcard button.open{align-self:flex-start;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.82rem;font-weight:600}
+.fcard button.open:hover{background:var(--purple)}
+
+/* ---------- Shared pages strip ---------- */
+.shared-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.spage{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.spage b{font-size:.85rem}
+.spage small{display:block;color:var(--muted);font-size:.7rem}
+.spage select{border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-size:.75rem;font-weight:600}
+
+/* ---------- Task cards ---------- */
+.back{background:none;border:none;color:var(--purple);font-weight:600;font-size:.85rem;margin-bottom:14px;display:inline-flex;align-items:center;gap:5px}
+.fn-head{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-left:5px solid var(--purple)}
+.fn-head h2{font-size:1.15rem}
+.fn-head .fmeta{font-size:.8rem;color:var(--muted)}
+.tasks{display:flex;flex-direction:column;gap:14px}
+.tcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.tcard-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.tcard h3{font-size:.98rem}
+.tcard .tdesc{font-size:.83rem;color:var(--muted);margin-top:5px;max-width:640px}
+.status{font-size:.72rem;font-weight:700;border-radius:999px;padding:4px 12px;color:#fff;white-space:nowrap}
+.st-not{background:var(--s-not)} .st-prog{background:var(--s-prog)} .st-sub{background:var(--s-sub)} .st-need{background:var(--s-need)} .st-ver{background:var(--s-ver)}
+.due{font-size:.72rem;color:var(--muted);margin-top:4px}
+.due.over{color:#c23a00;font-weight:700}
+.tbody{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.field label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.field input[type=text],.field input[type=url],.field input[type=date],.field textarea,.field select{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fbfaff}
+.field textarea{resize:vertical;min-height:64px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.two{grid-template-columns:1fr}}
+.checkrow{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:500}
+.checkrow input{width:17px;height:17px;accent-color:var(--purple)}
+.evlink a{color:var(--purple);font-size:.83rem;word-break:break-all}
+.comments{background:var(--lav-bg);border-radius:10px;padding:12px}
+.comments h4{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+.cmt{font-size:.82rem;padding:7px 0;border-bottom:1px dashed var(--line)}
+.cmt:last-of-type{border-bottom:none}
+.cmt b{color:var(--blue)} .cmt small{color:var(--muted);margin-left:6px;font-size:.7rem}
+.cmt-add{display:flex;gap:8px;margin-top:8px}
+.cmt-add input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.btn{border:none;border-radius:8px;padding:9px 16px;font-size:.82rem;font-weight:600}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.primary:hover{background:var(--purple)}
+.btn.submit{background:var(--purple);color:#fff}
+.btn.verify{background:var(--s-ver);color:#fff}
+.btn.return{background:#fff;color:#b35400;border:1.5px solid var(--s-need)}
+.btn.ghost{background:var(--lav-bg);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.locknote{font-size:.75rem;color:var(--muted);font-style:italic}
+
+/* ---------- Admin ---------- */
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.filters select{border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:#fff;font-weight:600;font-size:.83rem}
+.queue{display:flex;flex-direction:column;gap:10px}
+.qitem{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;border-left:4px solid var(--purple)}
+.qitem.orange{border-left-color:var(--s-need)}
+.qitem.aqua{border-left-color:var(--aqua)}
+.qitem .qi-t b{font-size:.9rem;display:block}
+.qitem .qi-t span{font-size:.76rem;color:var(--muted)}
+.empty{background:var(--card);border:1.5px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:.85rem}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;padding:11px 20px;border-radius:999px;font-size:.85rem;font-weight:600;opacity:0;transition:all .3s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:80px 0;color:var(--muted)}
+.spinner{width:36px;height:36px;border:4px solid var(--line);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+footer{max-width:1080px;margin:0 auto;padding:0 20px 30px;font-size:.72rem;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd-inner">
+    <div class="hd-title">
+      <small>Qiddiya · Workplace Division</small>
+      <h1>Workplace Hub — Implementation Tracker</h1>
+      <div class="sub">SharePoint migration readiness · Phase 1 Foundation</div>
+    </div>
+    <div class="role-box">
+      <label for="roleSel">Signed in as</label>
+      <select id="roleSel"></select>
+    </div>
+  </div>
+</header>
+
+<nav><div class="nav-inner" id="navTabs"></div></nav>
+
+<main id="app"><div class="loading"><div class="spinner"></div>Loading project data…</div></main>
+
+<footer>Workplace Hub Program · Qiddiya Investment Company · Internal use only<br>Data in this tracker is shared — updates made here are visible to all portal users.</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= CONFIG ================= */
+const FUNCTIONS = [
+  {id:'ops',  name:'Workplace Operations'},
+  {id:'hse',  name:'Workplace Health, Safety & Security'},
+  {id:'tech', name:'Workplace Technical'},
+  {id:'eff',  name:'Workplace Effectiveness'},
+  {id:'exp',  name:'Workplace Experience'},
+  {id:'sp',   name:'Workplace Supply Partnership'},
+  {id:'rc',   name:'Workplace Residential Community'}
+];
+const SHARED_PAGES = [
+  {id:'pgov', name:'Performance & Governance'},
+  {id:'reslib', name:'Resources Library'},
+  {id:'helpdesk', name:'Workplace Helpdesk'},
+  {id:'home', name:'Home Page'}
+];
+const STD_TASKS = [
+  {id:'content', title:'Content Preparation', type:'content',
+   desc:'Prepare and organise all function content per the Content Preparation & Migration Guide, under Key Resources, Document Libraries, Operational Tools, and Team & Governance. Provide a link to the prepared content location.'},
+  {id:'ownership', title:'Page Ownership Confirmation', type:'ownership',
+   desc:'Confirm the Function Page Owner and one or two nominated Page Contributors.'},
+  {id:'workshop', title:'IT Workshop', type:'workshop',
+   desc:'Track workshop scheduling, completion, and actions raised with IT.'},
+  {id:'closure', title:'Workshop Actions Closure', type:'basic',
+   desc:'Confirm that all actions raised during the IT workshop have been completed.'}
+];
+const EXTRA_TASKS = {
+  eff:[
+    {id:'datalog', title:'Submit Data Log Requirements', type:'content', desc:'Submit the Data Log requirements for Workplace-wide reporting.'},
+    {id:'visual',  title:'Proposed Visual Format for Home Page Reporting', type:'content', desc:'Submit the proposed visual format for Home Page reporting — KPI, reporting and data-source requirements only (not Home Page design).'},
+    {id:'kpi',     title:'Confirm Workplace-wide KPI Requirements', type:'basic', desc:'Confirm KPI requirements with all Workplace functions.'}
+  ],
+  sp:[
+    {id:'vendor',    title:'Prepare Vendor Information', type:'content', desc:'Prepare vendor information records per the contract record checklist.'},
+    {id:'contractor',title:'Prepare Contractor Information', type:'content', desc:'Prepare contractor information records.'},
+    {id:'contracts', title:'Organise Contracts by Supported Function', type:'basic', desc:'Store contracts centrally under Supply Partnership, categorised by the Workplace function they support.'},
+    {id:'versions',  title:'Confirm Latest Signed Contract Versions', type:'basic', desc:'Verify each contract document is the latest signed version.'}
+  ]
+};
+const STATUSES = ['Not Started','In Progress','Submitted','Needs Update','Verified'];
+const ST_CLASS = {'Not Started':'st-not','In Progress':'st-prog','Submitted':'st-sub','Needs Update':'st-need','Verified':'st-ver'};
+const STORE_KEY = 'wkh_tracker_v1';
+const ADMIN = 'admin';
+
+/* ================= STATE ================= */
+let state = null;
+let role = ADMIN;              // 'admin' or a function id
+let view = 'overview';         // overview | function | admin
+let openFn = null;             // function id when in function view
+let adminFilters = {fn:'all', st:'all'};
+let saveTimer = null;
+
+function taskDefs(fnId){ return STD_TASKS.concat(EXTRA_TASKS[fnId]||[]); }
+
+function blankTask(){ return {status:'Not Started', evidence:'', due:'', comments:[],
+  meta:{owner:'', contributors:'', wsDate:'', wsDone:false, wsActions:''}}; }
+
+function seedState(){
+  const s = {functions:{}, shared:{}, updatedAt:Date.now()};
+  FUNCTIONS.forEach(f=>{ s.functions[f.id] = {}; taskDefs(f.id).forEach(t=> s.functions[f.id][t.id] = blankTask()); });
+  SHARED_PAGES.forEach(p=> s.shared[p.id] = 'Not Started');
+  return s;
+}
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORE_KEY, true);
+    if(res && res.value){
+      state = JSON.parse(res.value);
+      // ensure new tasks exist if config evolved
+      FUNCTIONS.forEach(f=>{
+        state.functions[f.id] = state.functions[f.id]||{};
+        taskDefs(f.id).forEach(t=>{ if(!state.functions[f.id][t.id]) state.functions[f.id][t.id]=blankTask(); });
+      });
+      state.shared = state.shared || {};
+      SHARED_PAGES.forEach(p=>{ if(!state.shared[p.id]) state.shared[p.id]='Not Started'; });
+      return;
+    }
+  }catch(e){ /* key doesn't exist yet */ }
+  state = seedState();
+  await persist();
+}
+
+function persist(){
+  state.updatedAt = Date.now();
+  clearTimeout(saveTimer);
+  return new Promise(resolve=>{
+    saveTimer = setTimeout(async ()=>{
+      try{ await window.storage.set(STORE_KEY, JSON.stringify(state), true); }
+      catch(e){ toast('Could not save — check connection'); }
+      resolve();
+    }, 250);
+  });
+}
+
+async function loadRole(){
+  try{ const r = await window.storage.get('wkh_role'); if(r && r.value) role = r.value; }catch(e){}
+  if(role!==ADMIN && !FUNCTIONS.some(f=>f.id===role)) role = ADMIN;
+}
+function saveRole(){ window.storage.set('wkh_role', role).catch(()=>{}); }
+
+/* ================= DERIVED ================= */
+function fnStats(fnId){
+  const defs = taskDefs(fnId), data = state.functions[fnId];
+  const total = defs.length;
+  let verified=0, submitted=0, needs=0, progress=0, overdue=0;
+  const today = new Date().toISOString().slice(0,10);
+  defs.forEach(t=>{
+    const d = data[t.id];
+    if(d.status==='Verified') verified++;
+    else{
+      if(d.status==='Submitted') submitted++;
+      if(d.status==='Needs Update') needs++;
+      if(d.status==='In Progress') progress++;
+      if(d.due && d.due < today) overdue++;
+    }
+  });
+  const pct = Math.round(verified/total*100);
+  const ws = data.workshop;
+  let wsLabel='Workshop Not Scheduled', wsClass='';
+  if(ws.meta.wsDone){ wsLabel='Workshop Completed'; wsClass='green'; }
+  else if(ws.meta.wsDate){ wsLabel='Workshop Scheduled · '+fmtDate(ws.meta.wsDate); wsClass='aqua'; }
+  let ready='Not Started', rClass='';
+  if(verified===total){ ready='Ready'; rClass='green'; }
+  else if(needs>0 || overdue>0){ ready='Needs Attention'; rClass='orange'; }
+  else if(verified+submitted+progress>0){ ready='On Track'; rClass='aqua'; }
+  return {total,verified,submitted,needs,overdue,pct,outstanding:total-verified,wsLabel,wsClass,ready,rClass};
+}
+function overallStats(){
+  let v=0,t=0,awaiting=0;
+  FUNCTIONS.forEach(f=>{ const s=fnStats(f.id); v+=s.verified; t+=s.total; awaiting+=s.submitted; });
+  return {pct:Math.round(v/t*100), verified:v, total:t, awaiting};
+}
+function fmtDate(d){ if(!d) return ''; const dt=new Date(d+'T00:00'); return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function fnName(id){ const f=FUNCTIONS.find(x=>x.id===id); return f?f.name:id; }
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function roleLabel(){ return role===ADMIN ? 'Project Administrator' : fnName(role)+' — Leader'; }
+
+/* ================= RENDER ================= */
+const app = document.getElementById('app');
+
+function render(){
+  renderTabs();
+  if(view==='overview') renderOverview();
+  else if(view==='function') renderFunction(openFn);
+  else if(view==='admin') renderAdmin();
+}
+
+function renderTabs(){
+  const tabs = [{id:'overview',label:'Dashboard'}];
+  if(role===ADMIN) tabs.push({id:'admin',label:'Administration'});
+  else tabs.push({id:'mytasks',label:'My Tasks'});
+  document.getElementById('navTabs').innerHTML = tabs.map(t=>{
+    const active = (t.id===view) || (t.id==='mytasks' && view==='function' && openFn===role) || (t.id==='overview' && view==='function' && role===ADMIN);
+    return `<button class="tab ${t.id===view||(t.id==='mytasks'&&view==='function'&&openFn===role)?'active':''}" onclick="goTab('${t.id}')">${t.label}</button>`;
+  }).join('');
+}
+window.goTab = function(id){
+  if(id==='mytasks'){ view='function'; openFn=role; }
+  else { view=id; }
+  render(); window.scrollTo({top:0});
+};
+
+/* ---------- Overview ---------- */
+function ringSVG(pct){
+  const r=26, c=2*Math.PI*r, off=c*(1-pct/100);
+  return `<svg width="62" height="62" viewBox="0 0 62 62">
+    <circle cx="31" cy="31" r="${r}" fill="none" stroke="#efedf8" stroke-width="7"/>
+    <circle cx="31" cy="31" r="${r}" fill="none" stroke="url(#g)" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7122f4"/><stop offset="1" stop-color="#0BC0FF"/>
+    </linearGradient></defs></svg>`;
+}
+
+function renderOverview(){
+  const o = overallStats();
+  let html = `
+  <div class="overall">
+    <div><div class="big">${o.pct}%</div><div class="lbl">Overall completion</div></div>
+    <div class="bar"><div class="track"><div class="fill" style="width:${o.pct}%"></div></div></div>
+    <div class="mini-stats">
+      <div><b>${o.verified} / ${o.total}</b><span>Tasks verified</span></div>
+      <div><b>${o.awaiting}</b><span>Awaiting verification</span></div>
+      <div><b>${FUNCTIONS.filter(f=>fnStats(f.id).ready==='Ready').length} / ${FUNCTIONS.length}</b><span>Functions ready</span></div>
+    </div>
+  </div>
+  <div class="section-title">Function Readiness</div>
+  <div class="grid">`;
+  FUNCTIONS.forEach(f=>{
+    const s = fnStats(f.id);
+    const canOpen = role===ADMIN || role===f.id;
+    html += `
+    <div class="fcard">
+      <div class="fcard-top">
+        <div class="ring">${ringSVG(s.pct)}<div class="pct">${s.pct}%</div></div>
+        <div><h3>${f.name}</h3><div class="fmeta">${s.verified} of ${s.total} tasks verified · ${s.outstanding} outstanding</div></div>
+      </div>
+      <div class="chips">
+        <span class="chip ${s.rClass}">${s.ready}</span>
+        <span class="chip ${s.wsClass}">${s.wsLabel}</span>
+        ${s.needs? `<span class="chip orange">${s.needs} returned</span>`:''}
+        ${s.overdue? `<span class="chip orange">${s.overdue} overdue</span>`:''}
+      </div>
+      ${canOpen? `<button class="open" onclick="openFunction('${f.id}')">${role===ADMIN?'Review tasks':'Open my tasks'}</button>`:''}
+    </div>`;
+  });
+  html += `</div>
+  <div class="section-title">Shared Workplace Pages <span style="font-size:.72rem;color:var(--muted);font-weight:400;font-family:Inter">Maintained by the Program Leads</span></div>
+  <div class="shared-strip">`;
+  SHARED_PAGES.forEach(p=>{
+    const st = state.shared[p.id];
+    html += `<div class="spage"><div><b>${p.name}</b><small>${st}</small></div>
+      ${role===ADMIN? `<select onchange="setShared('${p.id}',this.value)">
+        ${['Not Started','In Progress','Ready'].map(x=>`<option ${x===st?'selected':''}>${x}</option>`).join('')}
+      </select>` : `<span class="chip ${st==='Ready'?'green':st==='In Progress'?'aqua':''}">${st}</span>`}
+    </div>`;
+  });
+  html += `</div>`;
+  app.innerHTML = html;
+}
+window.openFunction = function(id){ view='function'; openFn=id; render(); window.scrollTo({top:0}); };
+window.setShared = function(id,val){ state.shared[id]=val; persist(); toast(fnSharedName(id)+' set to '+val); render(); };
+function fnSharedName(id){ const p=SHARED_PAGES.find(x=>x.id===id); return p?p.name:id; }
+
+/* ---------- Function tasks ---------- */
+function renderFunction(fnId){
+  const canEdit = role===fnId;
+  const isAdmin = role===ADMIN;
+  const s = fnStats(fnId);
+  let html = `<button class="back" onclick="goTab('overview')">← Back to dashboard</button>
+  <div class="fn-head">
+    <div class="ring">${ringSVG(s.pct)}<div class="pct">${s.pct}%</div></div>
+    <div><h2>${fnName(fnId)}</h2>
+      <div class="fmeta">${s.verified} of ${s.total} tasks verified · <span class="chip ${s.rClass}">${s.ready}</span></div>
+    </div>
+  </div>
+  <div class="tasks">`;
+  taskDefs(fnId).forEach(def=>{
+    html += taskCard(fnId, def, canEdit, isAdmin);
+  });
+  html += `</div>`;
+  app.innerHTML = html;
+}
+
+function taskCard(fnId, def, canEdit, isAdmin){
+  const d = state.functions[fnId][def.id];
+  const locked = d.status==='Verified' || d.status==='Submitted';
+  const editable = canEdit && !locked;
+  const today = new Date().toISOString().slice(0,10);
+  const overdue = d.due && d.due<today && d.status!=='Verified';
+  let body = '';
+
+  /* type-specific fields */
+  if(def.type==='ownership'){
+    body += `<div class="two">
+      <div class="field"><label>Function Page Owner</label>
+        ${editable? `<input type="text" value="${esc(d.meta.owner)}" onchange="setMeta('${fnId}','${def.id}','owner',this.value)" placeholder="Full name">`
+                  : `<div>${esc(d.meta.owner)||'<span class=locknote>Not confirmed yet</span>'}</div>`}</div>
+      <div class="field"><label>Page Contributors (1–2)</label>
+        ${editable? `<input type="text" value="${esc(d.meta.contributors)}" onchange="setMeta('${fnId}','${def.id}','contributors',this.value)" placeholder="Name(s)">`
+                  : `<div>${esc(d.meta.contributors)||'<span class=locknote>Not confirmed yet</span>'}</div>`}</div>
+    </div>`;
+  }
+  if(def.type==='workshop'){
+    body += `<div class="two">
+      <div class="field"><label>Workshop Date</label>
+        ${editable? `<input type="date" value="${d.meta.wsDate}" onchange="setMeta('${fnId}','${def.id}','wsDate',this.value)">`
+                  : `<div>${d.meta.wsDate? fmtDate(d.meta.wsDate):'<span class=locknote>Not scheduled</span>'}</div>`}</div>
+      <div class="field"><label>Completion</label>
+        <div class="checkrow"><input type="checkbox" id="ws_${fnId}" ${d.meta.wsDone?'checked':''} ${editable?'':'disabled'}
+          onchange="setMeta('${fnId}','${def.id}','wsDone',this.checked)">
+          <label for="ws_${fnId}" style="all:unset;cursor:pointer">Workshop completed</label></div></div>
+    </div>
+    <div class="field"><label>Workshop Actions</label>
+      ${editable? `<textarea placeholder="Actions raised during the workshop…" onchange="setMeta('${fnId}','${def.id}','wsActions',this.value)">${esc(d.meta.wsActions)}</textarea>`
+                : `<div style="font-size:.85rem;white-space:pre-wrap">${esc(d.meta.wsActions)||'<span class=locknote>No actions recorded</span>'}</div>`}</div>`;
+  }
+  if(def.type==='content'){
+    if(editable){
+      body += `<div class="field"><label>Evidence / Folder Link</label>
+        <input type="url" value="${esc(d.evidence)}" placeholder="https://…" onchange="setEvidence('${fnId}','${def.id}',this.value)"></div>`;
+    } else if(d.evidence){
+      body += `<div class="field evlink"><label>Evidence / Folder Link</label><a href="${esc(d.evidence)}" target="_blank" rel="noopener">${esc(d.evidence)}</a></div>`;
+    }
+  }
+
+  /* comments */
+  body += `<div class="comments"><h4>Comments</h4>`;
+  if(d.comments.length===0) body += `<div class="locknote">No comments yet.</div>`;
+  d.comments.forEach(c=>{
+    body += `<div class="cmt"><b>${esc(c.by)}</b><small>${new Date(c.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</small><br>${esc(c.text)}</div>`;
+  });
+  if(canEdit || isAdmin){
+    body += `<div class="cmt-add"><input type="text" id="ci_${fnId}_${def.id}" placeholder="Add a comment…">
+      <button class="btn ghost" onclick="addComment('${fnId}','${def.id}')">Add</button></div>`;
+  }
+  body += `</div>`;
+
+  /* action buttons */
+  let btns = '';
+  if(canEdit){
+    if(d.status==='Not Started') btns += `<button class="btn primary" onclick="setStatus('${fnId}','${def.id}','In Progress')">Start task</button>`;
+    if(d.status==='In Progress' || d.status==='Needs Update') btns += `<button class="btn submit" onclick="submitTask('${fnId}','${def.id}')">Submit for verification</button>`;
+    if(d.status==='Submitted') btns += `<span class="locknote">Submitted — awaiting Project Administrator verification.</span>`;
+    if(d.status==='Verified') btns += `<span class="locknote">Verified by the Project Administrator.</span>`;
+  }
+  if(isAdmin){
+    if(d.status==='Submitted'){
+      btns += `<button class="btn verify" onclick="verifyTask('${fnId}','${def.id}')">Verify</button>
+               <button class="btn return" onclick="returnTask('${fnId}','${def.id}')">Return for update</button>`;
+    } else if(d.status==='Verified'){
+      btns += `<button class="btn return" onclick="returnTask('${fnId}','${def.id}')">Reopen</button>`;
+    }
+    btns += `<span style="display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted)">Due
+      <input type="date" value="${d.due}" style="border:1px solid var(--line);border-radius:7px;padding:5px 7px" onchange="setDue('${fnId}','${def.id}',this.value)"></span>`;
+  }
+  if(btns) body += `<div class="actions">${btns}</div>`;
+
+  return `<div class="tcard">
+    <div class="tcard-head">
+      <div><h3>${def.title}</h3><div class="tdesc">${def.desc}</div>
+        ${d.due? `<div class="due ${overdue?'over':''}">Due ${fmtDate(d.due)}${overdue?' · overdue':''}</div>`:''}
+      </div>
+      <span class="status ${ST_CLASS[d.status]}">${d.status}</span>
+    </div>
+    <div class="tbody">${body}</div>
+  </div>`;
+}
+
+/* ---------- Mutations ---------- */
+window.setMeta = function(fnId,tId,key,val){ state.functions[fnId][tId].meta[key]=val;
+  const t=state.functions[fnId][tId]; if(t.status==='Not Started') t.status='In Progress';
+  persist(); render(); };
+window.setEvidence = function(fnId,tId,val){ state.functions[fnId][tId].evidence=val.trim();
+  const t=state.functions[fnId][tId]; if(t.status==='Not Started'&&val.trim()) t.status='In Progress';
+  persist(); render(); };
+window.setStatus = function(fnId,tId,st){ state.functions[fnId][tId].status=st; persist(); render(); };
+window.setDue = function(fnId,tId,val){ state.functions[fnId][tId].due=val; persist(); toast('Due date updated'); render(); };
+window.submitTask = function(fnId,tId){
+  const t = state.functions[fnId][tId];
+  t.status='Submitted';
+  t.comments.push({by:roleLabel(), text:'Task submitted for verification.', ts:Date.now()});
+  persist(); toast('Submitted for verification'); render();
+};
+window.verifyTask = function(fnId,tId){
+  const t = state.functions[fnId][tId];
+  t.status='Verified';
+  t.comments.push({by:'Project Administrator', text:'Task verified.', ts:Date.now()});
+  persist(); toast('Task verified'); render();
+};
+window.returnTask = function(fnId,tId){
+  const reason = prompt('Reason for returning this task (shown to the function leader):','');
+  if(reason===null) return;
+  const t = state.functions[fnId][tId];
+  t.status='Needs Update';
+  t.comments.push({by:'Project Administrator', text:'Returned for update'+(reason?': '+reason:'.'), ts:Date.now()});
+  persist(); toast('Returned to function'); render();
+};
+window.addComment = function(fnId,tId){
+  const inp = document.getElementById('ci_'+fnId+'_'+tId);
+  const text = inp.value.trim(); if(!text) return;
+  state.functions[fnId][tId].comments.push({by:roleLabel(), text, ts:Date.now()});
+  persist(); render();
+};
+
+/* ---------- Admin ---------- */
+function renderAdmin(){
+  const o = overallStats();
+  const today = new Date().toISOString().slice(0,10);
+  const awaiting=[], upcoming=[], overdue=[];
+  FUNCTIONS.forEach(f=>{
+    taskDefs(f.id).forEach(def=>{
+      const d = state.functions[f.id][def.id];
+      if(d.status==='Submitted') awaiting.push({f,def,d});
+      if(d.due && d.due<today && d.status!=='Verified') overdue.push({f,def,d});
+    });
+    const ws = state.functions[f.id].workshop;
+    if(ws.meta.wsDate && !ws.meta.wsDone && ws.meta.wsDate>=today) upcoming.push({f, date:ws.meta.wsDate});
+  });
+  upcoming.sort((a,b)=>a.date.localeCompare(b.date));
+
+  let html = `
+  <div class="overall">
+    <div><div class="big">${o.pct}%</div><div class="lbl">Project completion</div></div>
+    <div class="bar"><div class="track"><div class="fill" style="width:${o.pct}%"></div></div></div>
+    <div class="mini-stats">
+      <div><b>${awaiting.length}</b><span>Awaiting verification</span></div>
+      <div><b>${upcoming.length}</b><span>Upcoming workshops</span></div>
+      <div><b>${overdue.length}</b><span>Overdue items</span></div>
+    </div>
+  </div>
+
+  <div class="section-title">Awaiting Verification <span class="count">${awaiting.length}</span></div>
+  <div class="queue">${awaiting.length? awaiting.map(x=>`
+    <div class="qitem"><div class="qi-t"><b>${x.def.title}</b><span>${x.f.name}${x.d.evidence? ' · evidence attached':''}</span></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn verify" onclick="verifyTask('${x.f.id}','${x.def.id}')">Verify</button>
+        <button class="btn return" onclick="returnTask('${x.f.id}','${x.def.id}')">Return</button>
+        <button class="btn ghost" onclick="openFunction('${x.f.id}')">Open</button>
+      </div></div>`).join('') : `<div class="empty">Nothing waiting — all submissions are processed.</div>`}
+  </div>
+
+  <div class="section-title">Upcoming IT Workshops <span class="count">${upcoming.length}</span></div>
+  <div class="queue">${upcoming.length? upcoming.map(x=>`
+    <div class="qitem aqua"><div class="qi-t"><b>${x.f.name}</b><span>Workshop scheduled · ${fmtDate(x.date)}</span></div>
+      <button class="btn ghost" onclick="openFunction('${x.f.id}')">Open</button></div>`).join('') : `<div class="empty">No workshops currently scheduled.</div>`}
+  </div>
+
+  <div class="section-title">Overdue Items <span class="count">${overdue.length}</span></div>
+  <div class="queue">${overdue.length? overdue.map(x=>`
+    <div class="qitem orange"><div class="qi-t"><b>${x.def.title}</b><span>${x.f.name} · due ${fmtDate(x.d.due)} · ${x.d.status}</span></div>
+      <button class="btn ghost" onclick="openFunction('${x.f.id}')">Open</button></div>`).join('') : `<div class="empty">No overdue items.</div>`}
+  </div>
+
+  <div class="section-title">All Tasks</div>
+  <div class="filters">
+    <select onchange="adminFilters.fn=this.value;render()">
+      <option value="all" ${adminFilters.fn==='all'?'selected':''}>All functions</option>
+      ${FUNCTIONS.map(f=>`<option value="${f.id}" ${adminFilters.fn===f.id?'selected':''}>${f.name}</option>`).join('')}
+    </select>
+    <select onchange="adminFilters.st=this.value;render()">
+      <option value="all" ${adminFilters.st==='all'?'selected':''}>All statuses</option>
+      ${STATUSES.map(s=>`<option ${adminFilters.st===s?'selected':''}>${s}</option>`).join('')}
+    </select>
+  </div>
+  <div class="queue">`;
+  let any=false;
+  FUNCTIONS.forEach(f=>{
+    if(adminFilters.fn!=='all' && adminFilters.fn!==f.id) return;
+    taskDefs(f.id).forEach(def=>{
+      const d = state.functions[f.id][def.id];
+      if(adminFilters.st!=='all' && adminFilters.st!==d.status) return;
+      any=true;
+      html += `<div class="qitem" style="border-left-color:${cssStatus(d.status)}">
+        <div class="qi-t"><b>${def.title}</b><span>${f.name}${d.due? ' · due '+fmtDate(d.due):''}</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="status ${ST_CLASS[d.status]}">${d.status}</span>
+          <button class="btn ghost" onclick="openFunction('${f.id}')">Open</button>
+        </div></div>`;
+    });
+  });
+  if(!any) html += `<div class="empty">No tasks match these filters.</div>`;
+  html += `</div>`;
+  app.innerHTML = html;
+}
+function cssStatus(st){ return {'Not Started':'#8a91a3','In Progress':'#0BC0FF','Submitted':'#7122f4','Needs Update':'#FF7800','Verified':'#3aa316'}[st]; }
+
+/* ---------- Role selector ---------- */
+function renderRoleSelector(){
+  const sel = document.getElementById('roleSel');
+  sel.innerHTML = `<option value="${ADMIN}">Project Administrator</option>` +
+    FUNCTIONS.map(f=>`<option value="${f.id}">${f.name} — Leader</option>`).join('');
+  sel.value = role;
+  sel.onchange = ()=>{ role = sel.value; saveRole(); view='overview'; openFn=null; render(); };
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+/* ---------- Init ---------- */
+(async function init(){
+  try{
+    await loadRole();
+    await loadState();
+    renderRoleSelector();
+    render();
+  }catch(e){
+    app.innerHTML = `<div class="empty">Could not load project data. Refresh the page to try again.</div>`;
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
